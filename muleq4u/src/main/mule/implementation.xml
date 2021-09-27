@@ -10,10 +10,10 @@ http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/c
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
 http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
 	<flow name="create-user-flow" doc:id="03d3dc30-3ecb-41e5-8fc6-ab81cd5ccd13" >
-		<crypto:jce-encrypt-pbe doc:name="Encrypt password" doc:id="f3030c9a-ea5f-4646-a68a-f23476ef9fb5" target="pwVar" password="${jce.password}">
+		<crypto:jce-encrypt-pbe doc:name="Encrypt password" doc:id="f3030c9a-ea5f-4646-a68a-f23476ef9fb5" target="pwVar" password="${secure::jce.password}">
 			<crypto:content ><![CDATA[#[payload.password]]]></crypto:content>
 		</crypto:jce-encrypt-pbe>
-		<crypto:jce-encrypt-pbe doc:name="Encrypt Username" doc:id="3535913d-93c6-48a3-8f76-30c05a78e5b2" password="${jce.password}" target="numberVar">
+		<crypto:jce-encrypt-pbe doc:name="Encrypt Username" doc:id="3535913d-93c6-48a3-8f76-30c05a78e5b2" password="${secure::jce.password}" target="numberVar">
 			<crypto:content ><![CDATA[#[payload.mobileNumber]]]></crypto:content>
 		</crypto:jce-encrypt-pbe>
 		<ee:transform doc:name="Convert the data into base64" doc:id="9c27364f-0d0c-4b9d-9434-3f1aef14cb03" >

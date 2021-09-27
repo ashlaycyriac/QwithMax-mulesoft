@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/sqs http://www.mulesoft.org/schema/mule/sqs/current/mule-sqs.xsd">
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/sqs http://www.mulesoft.org/schema/mule/sqs/current/mule-sqs.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
     <http:listener-config name="mule-q4u-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS">
             <tls:context>
@@ -9,14 +10,13 @@
     </http:listener-config>
     <apikit:config name="mule-q4u-config" api="mule-q4u.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <db:config name="Database_Config" doc:name="Database Config" doc:id="a8862969-00c4-4864-8420-ca3d229ff49d">
-        <db:my-sql-connection host="${aws.host}" port="${aws.port}" user="${aws.user}" password="${aws.password}" database="${aws.db}">
+        <db:my-sql-connection host="${aws.host}" port="${aws.port}" user="${aws.user}" password="${secure::aws.password}" database="${aws.db}">
             <db:pooling-profile maxPoolSize="${db.poolsize}" minPoolSize="${db.minpool}" acquireIncrement="${db.acquire}" />
         </db:my-sql-connection>
     </db:config>
-    <configuration-properties doc:name="Configuration properties" doc:id="b30c28e4-fe68-4730-93f5-c0c6d1408374" file="common.properties" />
     <api-gateway:autodiscovery apiId="${api.Id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="9aa10259-d65e-4def-95aa-0e4159a08451" flowRef="mule-q4u-main" />
     <email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="f47bb177-6b94-40c4-9465-51e8e1f029b3">
-        <email:smtp-connection host="${smtp.host}" port="${smtp.port}" user="${smtp.user}" password="${smtp.pw}" connectionTimeout="30" readTimeout="30" writeTimeout="30">
+        <email:smtp-connection host="${smtp.host}" port="${smtp.port}" user="${smtp.user}" password="${secure::smtp.pw}" connectionTimeout="30" readTimeout="30" writeTimeout="30">
             <email:properties>
                 <email:property key="mail.smtp.starttls.enable" value="true" />
                 <email:property key="mail.smtp.ssl.trust" value="${smtp.host}" />
@@ -27,9 +27,11 @@
         <os:private-object-store entryTtl="${os.ttl}" entryTtlUnit="DAYS" />
     </ee:object-store-caching-strategy>
     <sqs:config name="Amazon_SQS_main" doc:name="Amazon SQS Configuration" doc:id="f78a4549-ac17-4272-bb2f-4e7e6b2ce0a3">
-        <sqs:basic-connection accessKey="${sqs.accesskey}" secretKey="${sqs.secretkey}" />
+        <sqs:basic-connection accessKey="${secure::sqs.accesskey}" secretKey="${secure::sqs.secretkey}" />
     </sqs:config>
-    <flow name="mule-q4u-main">
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="0cbbae6c-6e4f-4f0a-a1be-2dcdc5981e56" file="common.properties" key="qwithmaxqwithmax" />
+	<configuration-properties doc:name="Configuration properties" doc:id="2f104779-7ad5-4e79-80e2-be581d150d93" file="common.properties" />
+	<flow name="mule-q4u-main">
         <http:listener config-ref="mule-q4u-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
@@ -39,7 +41,6 @@
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:error-response>
         </http:listener>
-        <logger level="INFO" doc:name="Logger" doc:id="c2428999-df18-4964-ad6d-8cb38aa0b597" message="#[payload]" />
         <apikit:router config-ref="mule-q4u-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">

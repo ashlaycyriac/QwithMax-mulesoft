@@ -26,10 +26,10 @@ output application/java
 		</ee:transform>
 		<choice doc:name="Choice" doc:id="7a0073fd-a8fe-4c3b-be2e-612fa2c83fd6" >
 			<when expression='#[attributes.maskedRequestPath contains("User")]'>
-				<crypto:jce-encrypt-pbe doc:name="Jce encrypt pbe" doc:id="5eaaa108-ff00-4f89-b9b9-c2922fe2431a" password="${jce.password}" target="numberVar">
+				<crypto:jce-encrypt-pbe doc:name="Jce encrypt pbe" doc:id="5eaaa108-ff00-4f89-b9b9-c2922fe2431a" password="${secure::jce.password}" target="numberVar">
 					<crypto:content ><![CDATA[#[vars.dbVar.number]]]></crypto:content>
 				</crypto:jce-encrypt-pbe>
-				<crypto:jce-encrypt-pbe doc:name="Jce encrypt pbe" doc:id="880e8d3b-b75f-43ed-b482-60758ba9419d" password="${jce.password}" target="pwVar">
+				<crypto:jce-encrypt-pbe doc:name="Jce encrypt pbe" doc:id="880e8d3b-b75f-43ed-b482-60758ba9419d" password="${secure::jce.password}" target="pwVar">
 					<crypto:content ><![CDATA[#[vars.dbVar.password]]]></crypto:content>
 				</crypto:jce-encrypt-pbe>
 				<ee:transform doc:name="Convert the data into base64" doc:id="907ac33a-bc70-49f6-8a7e-0da0eba7aa3e">
