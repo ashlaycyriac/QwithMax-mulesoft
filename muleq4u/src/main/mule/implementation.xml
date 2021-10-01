@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:os="http://www.mulesoft.org/schema/mule/os"
-	xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto"
-	xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto" xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/sqs http://www.mulesoft.org/schema/mule/sqs/current/mule-sqs.xsd
 http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
-http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 	<flow name="create-user-flow" doc:id="03d3dc30-3ecb-41e5-8fc6-ab81cd5ccd13" >
 		<crypto:jce-encrypt-pbe doc:name="Encrypt password" doc:id="f3030c9a-ea5f-4646-a68a-f23476ef9fb5" target="pwVar" password="${secure::jce.password}">
 			<crypto:content ><![CDATA[#[payload.password]]]></crypto:content>
@@ -573,19 +574,31 @@ output application/json
 }]]]></db:input-parameters>
 		</db:select>
 		<ee:cache doc:name="Caching the data for this pincode" doc:id="71c67110-52a9-48ce-94a3-92e621396ccc" cachingStrategy-ref="Caching_Strategy-main">
+			<http:request method="GET" doc:name="call the pincode api to get the location details about the pincode entered" doc:id="c0ac8dd6-9758-4ade-8b4d-aa72ac5dc158" config-ref="get-pincode-data-request-config" path='#["/" ++ attributes.queryParams.pincode]' target="pincodeVar" />
 			<db:select doc:name="get details of the shops in the pincode area" doc:id="c9f71f0a-0ce1-4aa0-934c-5b7505825012" config-ref="Database_Config">
 			<db:sql><![CDATA[select * from shop where pincode=:pincode]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	"pincode":attributes.queryParams.pincode
 }]]]></db:input-parameters>
 		</db:select>
+			<ee:transform doc:name="combine https response and db response" doc:id="0035223a-c67f-45ec-9203-e05f066ee28f" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"db": payload,
+	"http":vars.pincodeVar
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
 		</ee:cache>
 		<ee:transform doc:name="send shop data back" doc:id="18742c47-cd64-4a07-9a96-d3582faa7a71">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-if(sizeOf(payload)>0) (payload map(item,index)->{
+if(sizeOf(payload.db)>0) (payload.db map(item,index)->{
 	"pincode": item.pincode,
             "VaccinationRequirement": item.VaccinationRequirement,
             "imageurl":item.image,
@@ -594,14 +607,15 @@ if(sizeOf(payload)>0) (payload map(item,index)->{
             "ShopAddress":item.ShopAddress,
             "shopid": item.shopid,
             "ShopContactNumber": item.ShopContactNumber,
-            "peopleInQueue":sizeOf(vars.queueVar filter ()-> $.shopid==item.shopid)
+            "peopleInQueue":sizeOf(vars.queueVar filter ()-> $.shopid==item.shopid),
+            "location": payload.http.PostOffice[0].Name[0]
          
             }) else []]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
 	<flow name="poll-flow" doc:id="d4111362-4bac-4423-bd27-a6f59ded4836" >
-		<db:select doc:name="check state" doc:id="559d5ddb-9ddd-4066-a554-43d4124afef2" config-ref="Database_Config">
+		<db:select doc:name="check current state from activity table" doc:id="559d5ddb-9ddd-4066-a554-43d4124afef2" config-ref="Database_Config">
 			<db:sql ><![CDATA[select position,state from activity where shopid=:shopid and userid=:userid and token=:token]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	"shopid":attributes.queryParams.shopId,
@@ -619,6 +633,22 @@ output application/json
    "state":payload[0].state
 	
 }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getActiveSpots-flow" doc:id="7c13179c-154b-46a9-8b77-10ff3b381e90" >
+		<db:select doc:name="get all active spots from activity table" doc:id="d543b5a8-18c2-4b87-824c-d5174edaba08" config-ref="Database_Config">
+			<db:sql ><![CDATA[select a.shopid,a.userid,a.position,a.token,b.shopName from activity a,shop b where a.shopid=b.shopId and a.userid=:userid and state="Q"]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"userid": attributes.queryParams.userid
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="ad74c813-9d2c-4de8-a5ad-6be76ab3d753" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>

@@ -30,6 +30,9 @@
     </sqs:config>
     <secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="0cbbae6c-6e4f-4f0a-a1be-2dcdc5981e56" file="common.properties" key="qwithmaxqwithmax" />
     <configuration-properties doc:name="Configuration properties" doc:id="2f104779-7ad5-4e79-80e2-be581d150d93" file="common.properties" />
+    <http:request-config name="get-pincode-data-request-config" doc:name="HTTP Request configuration" doc:id="10eb295f-c6bf-4ac8-b802-c08c1df6f41a" basePath="${pincode.basepath}">
+        <http:request-connection host="${pincode.host}" port="${pincode.port}" protocol="HTTPS" />
+    </http:request-config>
     <flow name="mule-q4u-main">
         <http:listener config-ref="mule-q4u-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -184,5 +187,8 @@ output application/json
     </flow>
     <flow name="get:\getReport:mule-q4u-config">
         <flow-ref doc:name="generate-report-flow" doc:id="684558bf-ff43-4144-a6a2-603529adafde" name="generate-report-flow" />
+    </flow>
+    <flow name="get:\getActiveSpots:mule-q4u-config">
+		<flow-ref doc:name="get active reservations" doc:id="4bf99f53-64a2-4752-a021-36e46484da91" name="getActiveSpots-flow"/>
     </flow>
 </mule>
